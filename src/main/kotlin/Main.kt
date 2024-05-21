@@ -3,6 +3,9 @@ import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.forEachLine
 import kotlin.io.path.readText
+import kotlin.math.floor
+import kotlin.math.min
+import kotlin.math.sqrt
 
 fun linearSearch(book: List<String>, peopleFile: Path): Int {
     var count = 0
@@ -14,6 +17,38 @@ fun operationTime(operationTime: Long) = "${operationTime / 1000 / 60} min. ${ o
 
 fun resultOfSearch(countFoundPeople: Int, countPeople: Int, linearSearchTime: Long) {
     println("Found $countFoundPeople / $countPeople entries. Time taken: ${operationTime(linearSearchTime)}")
+}
+
+fun jumpSearch(book: List<String>, peopleFile: Path): Int {
+    var count = 0
+    if (book.isNullOrEmpty()) return -1
+
+    val last = book.lastIndex
+    val step = floor(sqrt(last.toDouble()))
+
+    peopleFile.forEachLine {
+        var curr = 0
+        var prev = 0
+
+        while (book[curr] < it) {
+            prev = curr
+            if (book[curr] == it) {
+                count++
+                break
+            }
+            curr = min(curr + step, last.toDouble()).toInt()
+        }
+
+        while (curr < prev) {
+            curr--
+            if (curr <= prev) return -1
+            if (book[curr] == it) {
+                count++
+                break
+            }
+        }
+    }
+    return count
 }
 
 fun bubbleSort(phoneBook: MutableList<String> ): List<String> {
@@ -57,5 +92,23 @@ fun main() {
     startTime = System.currentTimeMillis()
     val sortedPhoneBook = bubbleSort(phoneBook)
     val bubbleSortTime = System.currentTimeMillis() - startTime
-    println("Bubble sort time: ${operationTime(bubbleSortTime)}")
+    var wasJumpSearch = false
+    countFoundPeople =
+        if (bubbleSortTime * 10 > linearSearchTime) {
+            linearSearch(sortedPhoneBook, peopleFile)
+        }
+        else {
+            wasJumpSearch = true
+            jumpSearch(sortedPhoneBook, peopleFile)
+        }
+    val searchTime = System.currentTimeMillis() - startTime + bubbleSortTime
+    val bubbleJumpSearchTime = bubbleSortTime + searchTime
+
+    resultOfSearch(countFoundPeople, countPeople, bubbleJumpSearchTime)
+
+    print("Sorting time: ${operationTime(bubbleSortTime)}")
+    if (!wasJumpSearch) {
+        println(" - STOPPED, moved to linear search")
+    }
+    println("Searching time: ${operationTime(searchTime)}")
 }
