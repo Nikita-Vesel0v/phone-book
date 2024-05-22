@@ -14,7 +14,7 @@ var timeLimit = 1000000L
 
 fun linearSearch(book: Map<String, String>, peopleFile: Path): Int {
     var count = 0
-    peopleFile.forEachLine { if (it in book.values) count++  }
+    peopleFile.forEachLine { if (book.containsKey(it)) count++  }
     return count
 }
 
@@ -22,7 +22,7 @@ fun operationTime(operationTime: Long) =
     "${operationTime / 1000 / 60} min. ${ operationTime / 1000 % 60 } sec. ${operationTime % 1000} ms."
 
 fun resultOfSearch(countFoundPeople: Int, countPeople: Int, timeTotal: Long) =
-    println("Found ${countFoundPeople + 1} / ${countPeople + 1} entries. Time taken: ${operationTime(timeTotal)}")
+    println("Found ${countFoundPeople} / ${countPeople + 1} entries. Time taken: ${operationTime(timeTotal)}")
 
 fun jumpSearch(book: Map<String, String>, peopleFile: Path): Int {
     var count = 0
@@ -31,7 +31,7 @@ fun jumpSearch(book: Map<String, String>, peopleFile: Path): Int {
     val last = book.size - 1
     val step = floor(sqrt(last.toDouble()))
 
-    val bookValues = book.values.toList()
+    val bookValues = book.keys.toList()
 
     peopleFile.forEachLine {
         var curr = 0
@@ -66,7 +66,7 @@ fun bubbleSort(book: MutableList<Pair<String, String>>): Map<String, String> {
     while (swapped) {
         swapped = false
         for (i in 0 until lastIndex) {
-            if (book[i].second > book[i + 1].second) {
+            if (book[i].first > book[i + 1].first) {
                 swapped = true
                 book[i + 1] = book[i].apply { book[i] = book[i + 1] }
             }
@@ -80,10 +80,10 @@ fun bubbleSort(book: MutableList<Pair<String, String>>): Map<String, String> {
 
 fun quickSort(list: MutableList<Pair<String, String>>, l: Int = 0, r: Int = list.lastIndex): Map<String, String> {
     fun partition(l: Int, r: Int): Int {
-        val pivot = list[r].second
+        val pivot = list[r].first
         var i = l - 1
         for (j in l until r) {
-            if (list[j].second < pivot) {
+            if (list[j].first < pivot) {
                 i++
                 list[i] = list[j].apply { list[j] = list[i] }
             }
@@ -106,7 +106,7 @@ fun binarySearch(book: Map<String, String>, peopleFile: Path): Int {
     var count = 0
     if (book.isEmpty()) return -1
 
-    val bookValues = book.values.toList()
+    val bookValues = book.keys.toList()
 
     var left: Int
     var right: Int
@@ -130,13 +130,19 @@ fun binarySearch(book: Map<String, String>, peopleFile: Path): Int {
     return count
 }
 
+fun hashMapSearch(book: HashMap<String, String>, peopleFile: Path): Int {
+    var count = 0
+    peopleFile.forEachLine { if (it in book.keys) count++  }
+    return count
+}
+
 
 fun main() {
     val workingDirectory = System.getProperty ("user.dir")
     val separator = File.separator
 
-    val bookFileName = "small_directory.txt"
-    val peopleFileName = "small_find.txt"
+    val bookFileName = "directory.txt"
+    val peopleFileName = "find.txt"
 
     val bookFile = Path("${workingDirectory}${separator}src${separator}main${separator}resources${separator}$bookFileName")
     val peopleFile = Path("${workingDirectory}${separator}src${separator}main${separator}resources${separator}$peopleFileName")
@@ -145,7 +151,7 @@ fun main() {
     bookFile.forEachLine {
         val mobileNumber = it.substring(0, (it.indexOfFirst { char -> char == ' '}))
         val name = it.substring((it.indexOfFirst { char -> char == ' '} + 1), it.lastIndex + 1)
-        phoneBook[mobileNumber] = name
+        phoneBook[name] = mobileNumber
     }
     val countPeople = peopleFile.readText().count { it == '\n'}
 
@@ -190,7 +196,7 @@ fun main() {
 
     }
 
-   // Quick sort and Binary searching
+    // Quick sort and Binary searching
     val quickBinarySearchTime: Long
     run {
         val phoneBookList = mutableListOf<Pair<String, String>>()
@@ -220,6 +226,22 @@ fun main() {
             print(" - STOPPED, moved to linear search")
         }
         println("\nSearching time: ${operationTime(searchTime)}")
+    }
+
+    // HashMap
+    val hashMapSearchTime: Long
+    run {
+        println("\nStart searching (hash table)...")
+        val startTime = System.currentTimeMillis()
+        val phoneBookHash = HashMap(phoneBook)
+        val createHashMapTime = System.currentTimeMillis() - startTime
+        val countFoundPeople = hashMapSearch(phoneBookHash, peopleFile)
+        val searchTime = System.currentTimeMillis() - (startTime + createHashMapTime)
+        hashMapSearchTime = System.currentTimeMillis() - startTime
+        resultOfSearch(countFoundPeople, countPeople, hashMapSearchTime)
+        println("Creating time: ${operationTime(createHashMapTime)}")
+        println("Searching time: ${operationTime(searchTime)}")
+
     }
 
 }
