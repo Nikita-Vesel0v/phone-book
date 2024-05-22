@@ -14,7 +14,11 @@ var timeLimit = 1000000L
 
 fun linearSearch(book: Map<String, String>, peopleFile: Path): Int {
     var count = 0
-    peopleFile.forEachLine { if (book.containsKey(it)) count++  }
+    peopleFile.forEachLine {
+        for (value in book.values) {
+            if (value == it) count++
+        }
+    }
     return count
 }
 
@@ -22,7 +26,7 @@ fun operationTime(operationTime: Long) =
     "${operationTime / 1000 / 60} min. ${ operationTime / 1000 % 60 } sec. ${operationTime % 1000} ms."
 
 fun resultOfSearch(countFoundPeople: Int, countPeople: Int, timeTotal: Long) =
-    println("Found ${countFoundPeople} / ${countPeople + 1} entries. Time taken: ${operationTime(timeTotal)}")
+    println("Found $countFoundPeople / $countPeople entries. Time taken: ${operationTime(timeTotal)}")
 
 fun jumpSearch(book: Map<String, String>, peopleFile: Path): Int {
     var count = 0
@@ -153,7 +157,7 @@ fun main() {
         val name = it.substring((it.indexOfFirst { char -> char == ' '} + 1), it.lastIndex + 1)
         phoneBook[name] = mobileNumber
     }
-    val countPeople = peopleFile.readText().count { it == '\n'}
+    val countPeople = peopleFile.readText().count { it == '\n'} + 1
 
     //Linear Searching
     val linearSearchTime: Long
